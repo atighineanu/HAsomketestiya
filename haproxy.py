@@ -1,6 +1,8 @@
 import os, subprocess
+import templ
 
 ip='192.168.100.222'
+ipbind='192.168.100.27'
 
 def NodeIPfinder(nodes):
     for i in range(0, len(nodes)):
@@ -32,27 +34,32 @@ def RunningChecker(temp, str) :
                             runnerip = nodes[k]
                             return runnerip
 
-def HaproxyInstaller(IPs) :
+
+
+def PackageInstaller(IPs, package) :
  for i in range(0, len(IPs)):
     ###checking if haproxy is installed:
-    proc = subprocess.Popen(["sshpass -p test ssh -Y root@"+IPs[i]+" 'rpm -qi haproxy'"], stdout=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(["sshpass -p test ssh -Y root@"+IPs[i]+" 'rpm -qi "+package+"'"], stdout=subprocess.PIPE, shell=True)
     (outcommand4, err) = proc.communicate()
 
-
+    #remembering the machine's hostname
+    proc = subprocess.Popen(["sshpass -p test ssh -Y root@"+IPs[i]+" 'hostname'"], stdout=subprocess.PIPE, shell=True)
+    (outcommand3, err) = proc.communicate()
 
     if 'not installed' in str(outcommand4):
-        proc = subprocess.Popen(["sshpass -p test ssh -Y root@"+IPs[i]+" 'zypper -n in haproxy'"], stdout=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(["sshpass -p test ssh -Y root@"+IPs[i]+" 'zypper -n in "+package+"'"], stdout=subprocess.PIPE, shell=True)
         (outcommand1, err) = proc.communicate()
-        proc = subprocess.Popen(["sshpass -p test ssh -Y root@"+IPs[i]+" 'hostname'"], stdout=subprocess.PIPE, shell=True)
-        (outcommand3, err) = proc.communicate()
+
 
         temp = outcommand1.split("\n")
+        ### last element [e.g. len(temp)-1] for some reason in zypper in output is ''
+        ### therefore I aim for the line len(temp)-2, like: "Installing: apache2-prefork-2.4.23-29.40.1.x86_64...[many dots]...done"
+        if 'Installing' in str(temp[len(temp)-2]) and '...done' in str(temp[len(temp)-2]) and package in str(temp[len(temp)-2]):
+                print 'Successfully installed '+package+' on this node: ' + IPs[i]+' '+ outcommand3
+    else:
+        print package +' is already installed on '+ IPs[i] + ' ' + outcommand3
     
-        for j in range(3, len(temp)):
-            if 'Installing' in str(temp[j]) and '...done' in str(temp[j]):
 
-                print 'Successfully installed haproxy on this node: ' + IPs[i]+' '+ outcommand3
-    
 
 
 #a = os.system("sshpass -p test ssh -Y root@192.168.100.222 'crm status'")
@@ -118,7 +125,7 @@ if len(temp) >= 3:              ###at least three nodes...
                 alternative.remove(nodes[j]) # removing the registered nodes from alternative list
 
 if counter >= 3:
-    print '2.c) all three nodes are well-registered. Success.'
+    print '2.c) all three nodes are well-registered. Success. \n'
 elif alternative != None:    #if alternative list of nodes is not empty -> register it with 'sbd -d <device> allocate <node>' command
     for i in range(0, len(alternative)):
         os.system("shpass -p test ssh -Y root@"+ip+" 'sbd -d "+sbddev+" allocate "+alternative[i]+"'")
@@ -127,7 +134,10 @@ elif alternative != None:    #if alternative list of nodes is not empty -> regis
 NodeIPfinder(nodes)
 
 ### Checking if haproxy installed on all nodes:
-HaproxyInstaller(IPs)
+PackageInstaller(IPs, 'haproxy')
+
+### Checking if apache2 installed on all nodes:
+PackageInstaller(IPs, 'apache2')
 
 
 
