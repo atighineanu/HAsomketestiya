@@ -21,7 +21,7 @@ Actions:
       - running is just "python haproxy.py"  (works with python2.7)
       - you need to have the same password for all cluster nodes and put it into the code.    
  -----------------------------------------------------
-    * Description of files:
+   * Description of files:
             - haproxy.py - main program
             - clustersetuptest.py - the script which tests the loadbalancer(with curl)
             - apachetempl - template of apache2 index.html
