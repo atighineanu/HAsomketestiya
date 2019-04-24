@@ -20,7 +20,7 @@ Actions:
       - you need to indicate in the code the IP of any node
       - running is just "python haproxy.py"  (works with python2.7)
       - you need to have the same password for all cluster nodes and put it into the code.    
-    -------------------------------------------------
+ -----------------------------------------------------
     * Description of files:
             - haproxy.py - main program
             - clustersetuptest.py - the script which tests the loadbalancer(with curl)
